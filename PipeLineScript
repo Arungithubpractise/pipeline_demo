@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+    
+    stages {
+        
+        stage('CleanWorkSpace')
+        {
+            steps{
+                dir('C:\\Project\\AutomationFramework')
+                {
+                    bat "rmdir /s /q PageObjectModel"
+                    bat "mkdir PageObjectModel"
+                }
+            }
+        }
+        stage('GitClone')
+        {
+            steps{
+                dir('C:\\Project\\AutomationFramework\\PageObjectModel')
+                {
+                    git branch: "master", url: "https://github.com/MaximumAutomation/AllureNUnitIntegration.git" 
+                }
+            }
+        }
+        
+        stage('DotNetClean') {
+            steps {
+                dotnetClean project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
+            }
+        }
+        stage('DotNetBuild')
+        {
+            steps{
+                dotnetBuild project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
+            }
+        }
+        stage('SettingsUpdate')
+        {
+            steps{
+                script
+                {
+                    def filename = 'C:/Project/AutomationFramework/PageObjectModel/Configuration/configsetting.json'
+                    def settings = readJSON file: filename
+                    settings["PlatformVersion"] = 'iPhone 14'
+                    settings['PlatformName'] = 'iOS'
+                    writeJSON file: filename, json: settings
+                }    
+            }
+            
+        }
+        stage('TestRun'){
+            steps{
+                dotnetTest project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
+            }
+        }
+        
+    }
+}
