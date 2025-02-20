@@ -6,9 +6,12 @@ pipeline {
         stage('CleanWorkSpace')
         {
             steps{
-               if exist PageObjectModel (
+ bat '''
+if exist PageObjectModel (
     rmdir /s /q PageObjectModel
 )
+'''
+
 
             }
         }
