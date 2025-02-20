@@ -6,11 +6,10 @@ pipeline {
         stage('CleanWorkSpace')
         {
             steps{
-                dir('C:\\Project\\AutomationFramework')
-                {
-                    bat "rmdir /s /q PageObjectModel"
-                    bat "mkdir PageObjectModel"
-                }
+               if exist PageObjectModel (
+    rmdir /s /q PageObjectModel
+)
+
             }
         }
         stage('GitClone')
