@@ -26,9 +26,11 @@ if exist PageObjectModel (
         }
         
         stage('DotNetClean') {
-            steps {
-                dotnetClean project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
-            }
+    steps {
+        bat 'dotnet clean'
+    }
+}
+
         }
         stage('DotNetBuild')
         {
