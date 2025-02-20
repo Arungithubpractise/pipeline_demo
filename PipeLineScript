@@ -2,21 +2,19 @@ pipeline {
     agent any
 
     environment {
-        // Adjust the following path if your .NET SDK is installed in a different location.
+        // Update this path if your .NET SDK is installed in a different location.
         DOTNET_EXE = 'C:\\Program Files\\dotnet\\dotnet.exe'
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                // Check out the source code from the repository configured in the job.
                 checkout scm
             }
         }
         
         stage('Clean Workspace') {
             steps {
-                // Remove the "PageObjectModel" directory if it exists.
                 bat '''
                 if exist PageObjectModel (
                     rmdir /s /q PageObjectModel
@@ -27,26 +25,25 @@ pipeline {
         
         stage('Restore Dependencies') {
             steps {
-                // Use the full path to dotnet.exe to restore NuGet packages.
+                // Print the DOTNET_EXE value for debugging purposes.
+                bat 'echo DOTNET_EXE is "%DOTNET_EXE%"'
+                // Restore dependencies using the full path to dotnet.exe.
                 bat '"%DOTNET_EXE%" restore'
             }
         }
         
         stage('Build') {
             steps {
-                // Build the solution/project in Release configuration.
                 bat '"%DOTNET_EXE%" build --configuration Release'
             }
         }
         
         stage('Test') {
             steps {
-                // Run tests and output results to a TRX file.
                 bat '"%DOTNET_EXE%" test --logger "trx;LogFileName=test_results.trx"'
             }
             post {
                 always {
-                    // Archive the test results for review.
                     archiveArtifacts artifacts: '**/test_results.trx', allowEmptyArchive: true
                 }
             }
@@ -55,7 +52,6 @@ pipeline {
     
     post {
         always {
-            // Clean up the workspace after the build.
             cleanWs()
         }
     }
