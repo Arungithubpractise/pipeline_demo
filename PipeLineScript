@@ -1,62 +1,57 @@
 pipeline {
     agent any
-    
+
     stages {
-        
-        stage('CleanWorkSpace')
-        {
-            steps{
- bat '''
-if exist PageObjectModel (
-    rmdir /s /q PageObjectModel
-)
-'''
-
-
+        stage('Checkout SCM') {
+            steps {
+                // Checkout the repository configured in the job
+                checkout scm
             }
         }
-        stage('GitClone')
-        {
-            steps{
-                dir('C:\\Project\\AutomationFramework\\PageObjectModel')
-                {
-                    git branch: "master", url: "https://github.com/MaximumAutomation/AllureNUnitIntegration.git" 
+
+        stage('Clean Workspace') {
+            steps {
+                // Remove the PageObjectModel directory if it exists
+                bat '''
+                    if exist PageObjectModel (
+                        rmdir /s /q PageObjectModel
+                    )
+                '''
+            }
+        }
+
+        stage('Restore Dependencies') {
+            steps {
+                // Restore NuGet packages and dependencies
+                bat 'dotnet restore'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Build the solution/project in Release configuration
+                bat 'dotnet build --configuration Release'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Run tests and output results to a TRX file
+                bat 'dotnet test --logger "trx;LogFileName=test_results.trx"'
+            }
+            post {
+                always {
+                    // Archive the test results
+                    archiveArtifacts artifacts: '**/test_results.trx', allowEmptyArchive: true
                 }
             }
         }
-        
-        stage('DotNetClean') {
-    steps {
-        bat 'dotnet clean'
     }
-}
 
+    post {
+        always {
+            // Clean up the workspace after the build
+            cleanWs()
         }
-        stage('DotNetBuild')
-        {
-            steps{
-                dotnetBuild project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
-            }
-        }
-        stage('SettingsUpdate')
-        {
-            steps{
-                script
-                {
-                    def filename = 'C:/Project/AutomationFramework/PageObjectModel/Configuration/configsetting.json'
-                    def settings = readJSON file: filename
-                    settings["PlatformVersion"] = 'iPhone 14'
-                    settings['PlatformName'] = 'iOS'
-                    writeJSON file: filename, json: settings
-                }    
-            }
-            
-        }
-        stage('TestRun'){
-            steps{
-                dotnetTest project: 'C:\\Project\\AutomationFramework1\\PageObjectModel'
-            }
-        }
-        
     }
 }
