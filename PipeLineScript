@@ -1,58 +1,43 @@
 pipeline {
-    agent any
-
-    environment {
-        // Update this path if your .NET SDK is installed in a different location.
-        DOTNET_EXE = 'C:\\Program Files\\dotnet\\dotnet.exe'
-    }
-
+    agent any 
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout Code') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/your-repo/your-project.git' 
             }
         }
         
-        stage('Clean Workspace') {
+        stage('Unit Tests') {
             steps {
-                bat '''
-                if exist PageObjectModel (
-                    rmdir /s /q PageObjectModel
-                )
-                '''
+                sh 'pytest tests/unit_tests.py'
+                junit(testResults: 'reports/unit_tests.xml')
             }
         }
         
-        stage('Restore Dependencies') {
+        stage('Integration Tests') {
             steps {
-                // Print the DOTNET_EXE value for debugging purposes.
-                bat 'echo DOTNET_EXE is "%DOTNET_EXE%"'
-                // Restore dependencies using the full path to dotnet.exe.
-                bat '"%DOTNET_EXE%" restore'
+                sh 'python tests/integration_tests.py'
+                junit(testResults: 'reports/integration_tests.xml')
             }
         }
         
-        stage('Build') {
+        stage('UI Tests (Optional)') {
             steps {
-                bat '"%DOTNET_EXE%" build --configuration Release'
+                sh 'selenium-tests.sh'
+                allure(results: 'reports/allure-results') 
             }
         }
         
-        stage('Test') {
+        stage('Smoke Tests') {
             steps {
-                bat '"%DOTNET_EXE%" test --logger "trx;LogFileName=test_results.trx"'
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: '**/test_results.trx', allowEmptyArchive: true
-                }
+                sh 'python tests/smoke_tests.py' 
             }
         }
-    }
-    
-    post {
-        always {
-            cleanWs()
+        
+        stage('Generate Test Reports') {
+            steps {
+                publishHtml(target: 'reports/test_report.html', alwaysLinkToLastBuild: true,  allowMissing: true)
+            }
         }
     }
 }
