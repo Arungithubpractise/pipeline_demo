@@ -1,12 +1,17 @@
 pipeline {
-    agent any 
+    agent any
+
     stages {
-        stage('Checkout Code') {
+        stage('Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo/your-project.git' 
+                checkout scm
             }
         }
-        
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/Arungithubpractise/pipeline_demo.git', branch: 'master'
+            }
+        }    
         stage('Unit Tests') {
             steps {
                 sh 'pytest tests/unit_tests.py'
