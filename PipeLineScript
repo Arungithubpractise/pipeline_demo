@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'develop', url: 'https://github.com/your-repo/your-project.git' 
+                git branch: 'develop', url: 'https://github.com/Arungithubpractise/pipeline_demo.git' 
             }
         }
         stage('Unit Tests') {
