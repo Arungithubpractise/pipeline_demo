@@ -1,34 +1,20 @@
 pipeline {
-    agent any 
+    agent any
+
     stages {
-        stage('Checkout Code') {
+        stage('Build') {
             steps {
-                git branch: 'master', url: 'https://github.com/Arungithubpractise/pipeline_demo.git'
+                echo 'Building..'
             }
         }
-        stage('Unit Tests') {
+        stage('Test') {
             steps {
-                bat 'pytest tests\\unit_tests.py'
-                junit testResults: '**\\reports\\unit_tests.xml'
+                echo 'Testing..'
             }
         }
-        stage('Integration Tests') {
+        stage('Deploy') {
             steps {
-                bat 'pytest tests\\integration_tests.py'
-                junit testResults: '**\\reports\\integration_tests.xml'
-            }
-        }
-        stage('UI Tests') {
-            steps {
-                bat 'selenium_tests.py'
-                archiveArtifacts artifacts: 'test_screenshots\\*.png', allowEmptyArchive: true
-            }
-        }
-        stage('Generate Test Report') {
-            steps {
-                // Replace 'generate_test_report.bat' with your Windows-compatible test report generator
-                bat 'generate_test_report.bat'
-                publishHtml target: [reportDir: 'reports', reportFiles: 'test_report.html', reportName: 'Test Report']
+                echo 'Deploying....'
             }
         }
     }
