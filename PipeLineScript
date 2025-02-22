@@ -31,10 +31,4 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            // Send test report to Slack or email notification based on test results 
-            // using a custom script or plugin
-        }
-    }
-}
+   
