@@ -1,48 +1,40 @@
 pipeline {
-    agent any
-
+    agent any 
     stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/Arungithubpractise/pipeline_demo.git', branch: 'master'
+                git branch: 'develop', url: 'https://github.com/your-repo/your-project.git' 
             }
-        }    
+        }
         stage('Unit Tests') {
             steps {
                 sh 'pytest tests/unit_tests.py'
-                junit(testResults: 'reports/unit_tests.xml')
+                junit(testResults: '**/reports/unit_tests.xml')
             }
         }
-        
         stage('Integration Tests') {
             steps {
-                sh 'python tests/integration_tests.py'
-                junit(testResults: 'reports/integration_tests.xml')
+                sh 'pytest tests/integration_tests.py'
+                junit(testResults: '**/reports/integration_tests.xml')
             }
         }
-        
-        stage('UI Tests (Optional)') {
+        stage('UI Tests') {
             steps {
-                sh 'selenium-tests.sh'
-                allure(results: 'reports/allure-results') 
+                sh 'selenium_tests.py'
+                archiveArtifacts artifacts: 'test_screenshots/*.png', allowEmptyArchive: true 
             }
         }
-        
-        stage('Smoke Tests') {
+        stage('Generate Test Report') {
             steps {
-                sh 'python tests/smoke_tests.py' 
+                sh 'generate_test_report.sh'
+                publishHtml(target: 'reports/test_report.html')
             }
         }
-        
-        stage('Generate Test Reports') {
-            steps {
-                publishHtml(target: 'reports/test_report.html', alwaysLinkToLastBuild: true,  allowMissing: true)
-            }
+    }
+    post {
+        always {
+            // Send test report to Slack or email notification based on test results 
+            // using a custom script or plugin
         }
     }
 }
