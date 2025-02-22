@@ -3,32 +3,33 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/Arungithubpractise/pipeline_demo.git' 
+                git branch: 'master', url: 'https://github.com/Arungithubpractise/pipeline_demo.git'
             }
         }
         stage('Unit Tests') {
             steps {
-                sh 'pytest tests/unit_tests.py'
-                junit(testResults: '**/reports/unit_tests.xml')
+                bat 'pytest tests\\unit_tests.py'
+                junit testResults: '**\\reports\\unit_tests.xml'
             }
         }
         stage('Integration Tests') {
             steps {
-                sh 'pytest tests/integration_tests.py'
-                junit(testResults: '**/reports/integration_tests.xml')
+                bat 'pytest tests\\integration_tests.py'
+                junit testResults: '**\\reports\\integration_tests.xml'
             }
         }
         stage('UI Tests') {
             steps {
-                sh 'selenium_tests.py'
-                archiveArtifacts artifacts: 'test_screenshots/*.png', allowEmptyArchive: true 
+                bat 'selenium_tests.py'
+                archiveArtifacts artifacts: 'test_screenshots\\*.png', allowEmptyArchive: true
             }
         }
         stage('Generate Test Report') {
             steps {
-                sh 'generate_test_report.sh'
-                publishHtml(target: 'reports/test_report.html')
+                // Replace 'generate_test_report.bat' with your Windows-compatible test report generator
+                bat 'generate_test_report.bat'
+                publishHtml target: [reportDir: 'reports', reportFiles: 'test_report.html', reportName: 'Test Report']
             }
         }
     }
-  } 
+}
