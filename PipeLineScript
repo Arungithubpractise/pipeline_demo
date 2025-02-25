@@ -1,125 +1,44 @@
 pipeline {
     agent any
 
-    // Parameters allow you to control the build behavior.
-    parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'master', description: 'Git branch to build')
-        booleanParam(name: 'RUN_DEPLOY', defaultValue: false, description: 'Run deployment stage')
-    }
-
-    // Environment variables for tool paths and directories.
-    environment {
-        DOTNET_EXE = 'C:\\Program Files\\dotnet\\dotnet.exe'
-        REPORT_DIR = 'reports'
-        SCREENSHOTS_DIR = 'test_screenshots'
-    }
-
-    // Pipeline options.
-    options {
-        timeout(time: 90, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+    tools {
+        maven 'Maven_3.8.1' // Ensure Maven is installed and configured in Jenkins
+        jdk 'JDK_11' // Use the required JDK version
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Check out the code using the branch parameter.
-                git branch: "${params.BRANCH_NAME}", url: 'https://github.com/Arungithubpractise/pipeline_demo.git'
+                git 'https://github.com/your-repository.git' // Replace with your repo URL
             }
         }
-        
-        stage('Clean Workspace') {
-            steps {
-                // Remove the PageObjectModel folder if it exists.
-                bat '''
-                    if exist "PageObjectModel" (
-                        rmdir /s /q "PageObjectModel"
-                    )
-                '''
-            }
-        }
-        
+
         stage('Build') {
             steps {
-                // Build the solution in Release configuration.
-                bat '"%DOTNET_EXE%" build --configuration Release'
+                sh 'mvn clean package' // Compile & package the Java project
             }
         }
-        
-        stage('Testing') {
-            parallel {
-                stage('Unit Tests') {
-                    steps {
-                        // Run unit tests using pytest (invoked via Python module).
-                        bat 'python -m pytest tests\\unit_tests.py --junitxml=%REPORT_DIR%\\unit_tests.xml'
-                    }
-                    post {
-                        always {
-                            junit '**\\reports\\unit_tests.xml'
-                        }
-                    }
-                }
-                stage('Integration Tests') {
-                    steps {
-                        // Run integration tests using pytest.
-                        bat 'python -m pytest tests\\integration_tests.py --junitxml=%REPORT_DIR%\\integration_tests.xml'
-                    }
-                    post {
-                        always {
-                            junit '**\\reports\\integration_tests.xml'
-                        }
-                    }
-                }
-                stage('UI Tests') {
-                    steps {
-                        // Run UI tests (for example, using pytest) and output results.
-                        bat 'python -m pytest tests\\ui_tests.py --junitxml=%REPORT_DIR%\\ui_tests.xml'
-                        // List screenshots (optional) to verify artifacts.
-                        bat 'dir "%SCREENSHOTS_DIR%"'
-                    }
-                    post {
-                        always {
-                            junit '**\\reports\\ui_tests.xml'
-                            archiveArtifacts artifacts: 'test_screenshots\\*.png', allowEmptyArchive: true
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Generate Test Report') {
+
+        stage('Run Tests') {
             steps {
-                // Run a batch file that generates an HTML report.
-                bat 'generate_test_report.bat'
-                publishHtml target: [reportDir: "${env.REPORT_DIR}", reportFiles: 'test_report.html', reportName: 'Test Report']
+                sh 'mvn test' // Run unit tests
             }
         }
-        
+
         stage('Deploy') {
-            // Run the deployment stage only if the RUN_DEPLOY parameter is true.
-            when {
-                expression { return params.RUN_DEPLOY }
-            }
             steps {
-                bat 'deploy_script.bat'
+                echo 'Deploying application...' 
+                // Add deployment script if needed
             }
         }
     }
-    
+
     post {
-        always {
-            // Clean up the workspace after the build.
-            cleanWs()
-        }
         success {
-            mail to: 'testers@example.com',
-                 subject: "SUCCESS: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
-                 body: "The build and tests were successful. Please review the test reports."
+            echo 'Build & Tests Passed ✅'
         }
         failure {
-            mail to: 'testers@example.com',
-                 subject: "FAILURE: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
-                 body: "The build failed. Please check the Jenkins console output for details."
+            echo 'Build Failed ❌'
         }
     }
 }
